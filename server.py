@@ -8,7 +8,7 @@ import tornado.web
 from urllib.parse import quote
 
 # For custom API
-#import hyaku2017
+#from api import hyaku2017
 
 
 BASE_URL = os.getenv('BASE_URL', 'https://iiif.example.com/')

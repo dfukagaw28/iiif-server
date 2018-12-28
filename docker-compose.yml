@@ -4,10 +4,10 @@ services:
   app:
     build:
       context: .
-    environment:
-      #BASE_URL: "https://iiif.tiramis2.doshisha.ac.jp/"
-      #IMAGES_DIR: "/data/images/"
-      #TZ: "Asia/Tokyo"
+    #environment:
+    #  #BASE_URL: "https://iiif.tiramis2.doshisha.ac.jp/"
+    #  #IMAGES_DIR: "/data/images/"
+    #  #TZ: "Asia/Tokyo"
     command: entrypoint.sh
     restart: always
     volumes:

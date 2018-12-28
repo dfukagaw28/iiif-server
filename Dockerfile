@@ -1,9 +1,14 @@
-FROM python:3
+FROM python:3-alpine
+
 ENV PYTHONUNBUFFERED 1
-ADD Pipfile /Pipfile
-ADD Pipfile.lock /Pipfile.lock
+
+COPY Pipfile /
+COPY Pipfile.lock /
 RUN pip install pipenv
 RUN pipenv install --system --deploy
-WORKDIR /code
-ADD docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+
+COPY server.py /
+COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+COPY ./api/ /api/
