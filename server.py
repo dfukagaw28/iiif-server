@@ -53,8 +53,7 @@ class ImageInfoHandler(tornado.web.RequestHandler):
     INTERNAL_BASE_URL_BYTES = INTERNAL_IIPSRV_BASE_URL.encode('utf-8')
     EXTERNAL_BASE_URL_BYTES = BASE_URL.encode('utf-8') + b'v2/image/'
 
-    @tornado.web.asynchronous
-    def get(self, query):
+    async def get(self, query):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
         fetch_iipsrv(f'{ identifier_quoted }/info.json', self.__on_download)
@@ -73,8 +72,7 @@ class ImageInfoHandler(tornado.web.RequestHandler):
 ## Image Request
 ## GET /{identifier}/{region}/{size}/{rotation}/{quality}.{format}
 class ImageHandler(tornado.web.RequestHandler):
-    @tornado.web.asynchronous
-    def get(self, query, params, region, size, rotation, quality, format):
+    async def get(self, query, params, region, size, rotation, quality, format):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
         fetch_iipsrv(f'{ identifier_quoted }/{ params }', self.__on_download)
