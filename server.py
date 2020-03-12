@@ -15,9 +15,9 @@ BASE_URL = os.getenv('BASE_URL', 'https://iiif.example.com/')
 INTERNAL_IIPSRV_BASE_URL = 'http://iipsrv/?IIIF='
 
 
-def fetch_iipsrv(query, callback):
-    http = tornado.httpclient.AsyncHTTPClient()
-    http.fetch(f'{ INTERNAL_IIPSRV_BASE_URL }{ query }', callback)
+async def fetch_iipsrv(query, callback):
+    http_client = tornado.httpclient.AsyncHTTPClient()
+    await http_client.fetch(f'{ INTERNAL_IIPSRV_BASE_URL }{ query }', callback)
 
 
 def resolve_identifier(identifier):
@@ -56,7 +56,7 @@ class ImageInfoHandler(tornado.web.RequestHandler):
     async def get(self, query):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
-        fetch_iipsrv(f'{ identifier_quoted }/info.json', self.__on_download)
+        await fetch_iipsrv(f'{ identifier_quoted }/info.json', self.__on_download)
 
     def __on_download(self, response):
         data = response.buffer.read()
@@ -75,7 +75,7 @@ class ImageHandler(tornado.web.RequestHandler):
     async def get(self, query, params, region, size, rotation, quality, format):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
-        fetch_iipsrv(f'{ identifier_quoted }/{ params }', self.__on_download)
+        await fetch_iipsrv(f'{ identifier_quoted }/{ params }', self.__on_download)
 
     def __on_download(self, response):
         logging.debug(response)
