@@ -15,9 +15,10 @@ BASE_URL = os.getenv('BASE_URL', 'https://iiif.example.com/')
 INTERNAL_IIPSRV_BASE_URL = 'http://iipsrv/?IIIF='
 
 
-async def fetch_iipsrv(query, callback):
+async def fetch_iipsrv(query):
     http_client = tornado.httpclient.AsyncHTTPClient()
-    await http_client.fetch(f'{ INTERNAL_IIPSRV_BASE_URL }{ query }', callback)
+    response = await http_client.fetch(f'{ INTERNAL_IIPSRV_BASE_URL }{ query }')
+    return response
 
 
 def resolve_identifier(identifier):
@@ -29,9 +30,11 @@ def resolve_identifier(identifier):
 
 
 def set_headers(request, response):
-    for key in ('Content-Type',):
-        if key in response.headers:
-            request.set_header(key, response.headers[key])
+    try:
+        content_type = response.headers['Content-Type']
+        request.set_header(key, content_type)
+    except KeyError:
+        pass
 
 
 def write_buffers_by_chunks(request, buffer):
@@ -56,17 +59,25 @@ class ImageInfoHandler(tornado.web.RequestHandler):
     async def get(self, query):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
-        await fetch_iipsrv(f'{ identifier_quoted }/info.json', self.__on_download)
 
-    def __on_download(self, response):
-        data = response.buffer.read()
-        if response.code == 200:
-            data = data.replace(self.INTERNAL_BASE_URL_BYTES, self.EXTERNAL_BASE_URL_BYTES)
-            set_headers(self, response)
+        try:
+            response = await fetch_iipsrv(f'{ identifier_quoted }/info.json')
+        except tornado.httpclient.HTTPError as e:
+            logging.debug(e)
+            self.set_status(e.response.code, e.response.reason)
+            logging.debug(e.response.body)
         else:
-            self.set_status(response.code, response.reason)
-        self.write(data)
-        self.finish()
+            # Get the response body from the image server
+            data = response.buffer.read()
+
+            # Rewrite @id
+            data = data.replace(self.INTERNAL_BASE_URL_BYTES, self.EXTERNAL_BASE_URL_BYTES)
+
+            # Set headers
+            set_headers(self, response)
+
+            # Output the response body
+            self.write(data)
 
 
 ## Image Request
@@ -75,16 +86,16 @@ class ImageHandler(tornado.web.RequestHandler):
     async def get(self, query, params, region, size, rotation, quality, format):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
-        await fetch_iipsrv(f'{ identifier_quoted }/{ params }', self.__on_download)
 
-    def __on_download(self, response):
-        logging.debug(response)
-        if response.code == 200:
-            set_headers(self, response)
+        try:
+            response = await fetch_iipsrv(f'{ identifier_quoted }/{ params }')
+        except tornado.httpclient.HTTPError as e:
+            logging.debug(e)
+            self.set_status(e.response.code, e.response.reason)
+            logging.debug(e.response.body)
         else:
-            self.set_status(response.code, response.reason)
-        write_buffers_by_chunks(self, response.buffer)
-        self.finish()
+            set_headers(self, response)
+            write_buffers_by_chunks(self, response.buffer)
 
 
 ## Other Request (Redirect)
