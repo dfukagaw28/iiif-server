@@ -51,6 +51,6 @@ $ du -h default.jpg
 ### Update Pipfile
 
 ```
-$ podman run --rm -it -v $(pwd):/code -w /code python:3.11-alpine /bin/sh/code
+$ podman run --rm -it -v $(pwd):/code -w /code python:3.11-alpine /bin/sh
 $ pipenv install tornado
 ```
