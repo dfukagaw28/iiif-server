@@ -8,7 +8,7 @@ import tornado.web
 from urllib.parse import quote
 
 # For custom API
-#from api import hyaku2017
+from api import hyaku2017
 
 
 BASE_URL = os.getenv('BASE_URL', 'https://iiif.example.com/')
@@ -29,12 +29,10 @@ def resolve_identifier(identifier):
     return identifier
 
 
-def set_headers(request, response):
-    try:
-        content_type = response.headers['Content-Type']
-        request.set_header(key, content_type)
-    except KeyError:
-        pass
+def set_headers(request_handler, response):
+    key = 'Content-Type'
+    if key in response.headers:
+        request_handler.set_header(key, response.headers[key])
 
 
 def write_buffers_by_chunks(request, buffer):
@@ -54,7 +52,7 @@ def write_buffers_by_chunks(request, buffer):
 ## GET /{identifier}/info.json
 class ImageInfoHandler(tornado.web.RequestHandler):
     INTERNAL_BASE_URL_BYTES = INTERNAL_IIPSRV_BASE_URL.encode('utf-8')
-    EXTERNAL_BASE_URL_BYTES = BASE_URL.encode('utf-8') + b'v2/image/'
+    EXTERNAL_BASE_URL_BYTES = BASE_URL.encode('utf-8') + b'v3/image/'
 
     async def get(self, query):
         identifier_raw = resolve_identifier(query)
@@ -115,8 +113,8 @@ def make_app():
         (r"/v[23]/image/(.+)/info\.json", ImageInfoHandler),
         (r"/v[23]/image/(.+)/(([^/]+)/([^/]+)/([^/]+)/(\w+)\.(\w+))", ImageHandler),
         (r"/v[23]/image/(.+)", ImageOtherHandler),
-        #hyaku2017.manifest_handler,
-        #hyaku2017.canvas_handler,
+        hyaku2017.manifest_handler,
+        hyaku2017.canvas_handler,
     ])
 
 
@@ -125,4 +123,3 @@ if __name__ == "__main__":
     app = make_app()
     app.listen(80)
     tornado.ioloop.IOLoop.current().start()
-
