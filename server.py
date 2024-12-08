@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 # For custom API
 from api import hyaku2017
+from api import hyaku2020
 
 
 BASE_URL = os.getenv('BASE_URL', 'https://iiif.example.com/')
@@ -29,10 +30,10 @@ def resolve_identifier(identifier):
     return identifier
 
 
-def set_headers(request_handler, response):
-    key = 'Content-Type'
-    if key in response.headers:
-        request_handler.set_header(key, response.headers[key])
+def set_headers(request, response):
+    for key in ('Content-Type',):
+        if key in response.headers:
+            request.set_header(key, response.headers[key])
 
 
 def write_buffers_by_chunks(request, buffer):
@@ -43,9 +44,9 @@ def write_buffers_by_chunks(request, buffer):
         request.write(chunk)
 
 
-#class HelloHandler(tornado.web.RequestHandler):
-#    def get(self):
-#        self.write("Hello, world")
+class HelloHandler(tornado.web.RequestHandler):
+   def get(self):
+       self.write("Hello, world")
 
 
 ## Image Information Request
@@ -96,7 +97,7 @@ class ImageHandler(tornado.web.RequestHandler):
             write_buffers_by_chunks(self, response.buffer)
 
 
-## Other Request (Redirect)
+## Image Other Request (Redirect)
 ## GET /{identifier}
 class ImageOtherHandler(tornado.web.RequestHandler):
     def get(self, *args, **kwargs):
@@ -109,12 +110,14 @@ class ImageOtherHandler(tornado.web.RequestHandler):
 
 def make_app():
     return tornado.web.Application([
-        #(r"/hello", HelloHandler),
+        (r"/hello", HelloHandler),
         (r"/v[23]/image/(.+)/info\.json", ImageInfoHandler),
         (r"/v[23]/image/(.+)/(([^/]+)/([^/]+)/([^/]+)/(\w+)\.(\w+))", ImageHandler),
         (r"/v[23]/image/(.+)", ImageOtherHandler),
         hyaku2017.manifest_handler,
         hyaku2017.canvas_handler,
+        hyaku2020.manifest_handler,
+        hyaku2020.canvas_handler,
     ])
 
 
