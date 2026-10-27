@@ -36,6 +36,17 @@ def set_headers(request, response):
             request.set_header(key, response.headers[key])
 
 
+def handle_fetch_error(request, e):
+    logging.debug(e)
+    if isinstance(e, tornado.httpclient.HTTPError) and e.response is not None:
+        request.set_status(e.response.code, e.response.reason)
+        logging.debug(e.response.body)
+    else:
+        # No response from the image server (connection error, timeout, etc.)
+        logging.error(f'Failed to fetch from iipsrv: {e!r}')
+        request.set_status(502)
+
+
 def write_buffers_by_chunks(request, buffer):
     while True:
         chunk = buffer.read(2048)
@@ -61,10 +72,8 @@ class ImageInfoHandler(tornado.web.RequestHandler):
 
         try:
             response = await fetch_iipsrv(f'{ identifier_quoted }/info.json')
-        except tornado.httpclient.HTTPError as e:
-            logging.debug(e)
-            self.set_status(e.response.code, e.response.reason)
-            logging.debug(e.response.body)
+        except (tornado.httpclient.HTTPError, OSError) as e:
+            handle_fetch_error(self, e)
         else:
             # Get the response body from the image server
             data = response.buffer.read()
@@ -88,10 +97,8 @@ class ImageHandler(tornado.web.RequestHandler):
 
         try:
             response = await fetch_iipsrv(f'{ identifier_quoted }/{ params }')
-        except tornado.httpclient.HTTPError as e:
-            logging.debug(e)
-            self.set_status(e.response.code, e.response.reason)
-            logging.debug(e.response.body)
+        except (tornado.httpclient.HTTPError, OSError) as e:
+            handle_fetch_error(self, e)
         else:
             set_headers(self, response)
             write_buffers_by_chunks(self, response.buffer)
