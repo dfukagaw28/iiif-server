@@ -17,24 +17,15 @@ def get_collection_name():
 
 ##
 def get_image_name(a, b, n):
-    ## Poem Number 1 --> 002.tif
-    #if a not in ['1kami', '2shimo']:
-    #    a = '1kami'
-    #if b not in ['1efuda', '2jifuda']:
-    #    b = '1efuda'
     return f'{a}_{b}_{n}.tif'
 
 
 ##
 def get_canvas_name(a, b, n):
-    #return get_image_name(a, b, n)
     return f'{a}/{b}/{n}'
 
 
 ##
-def foo():
-    return
-
 def get_all_canvas_keys():
     return [
         ('1kami', '1efuda', 1),
@@ -49,24 +40,6 @@ def get_all_canvas_keys():
         ('2shimo', '2jifuda', 2),
         ('2shimo', '2jifuda', 3),
         ('2shimo', '2jifuda', 4),
-    ]
-
-
-##
-def get_all_image_names():
-    return [
-        '1kami_1efuda_1.tif',
-        '1kami_1efuda_2.tif',
-        '1kami_1efuda_3.tif',
-        '1kami_1efuda_4.tif',
-        '2kami_1efuda_1.tif',
-        '2kami_1efuda_2.tif',
-        '2kami_1efuda_3.tif',
-        '2kami_1efuda_4.tif',
-        '2kami_2efuda_1.tif',
-        '2kami_2efuda_2.tif',
-        '2kami_2efuda_3.tif',
-        '2kami_2efuda_4.tif',
     ]
 
 
@@ -127,8 +100,6 @@ def get_image_annotation(a, b, n):
 
 ## Get JSON-like object for a thumbnail
 def get_thumbnail(image_name, width, height):
-    #image_name = get_image_name(n)
-    #image_name = '1kami_1efuda_1.tif'
     image_uri = get_image_service_uri(image_name)
     return {
         '@id': image_uri + f'/full/{width},{height}/0/default.jpg',
@@ -161,11 +132,6 @@ def get_canvas(a, b, n):
 ## Get JSON-like object for a manifest
 def get_manifest():
     collection_name = get_collection_name()
-    #group = collection_name[-1]
-    #range_start = {'A':1,'B':21,'C':41,'D':61,'E':81}[group]
-    #canvases = [get_canvas(n) for n in range(range_start, range_start + 20)]
-    #return { 'globals': list(globals().keys()), 'foo': foo() }
-    #print( get_all_canvas_keys )
     canvases = [get_canvas(a, b, n) for a, b, n in get_all_canvas_keys()]
     image_names = [get_image_name(a, b, n) for a, b, n in get_all_canvas_keys()]
     return {
