@@ -61,3 +61,9 @@ To add a new package:
 ```
 $ uv add <package>
 ```
+
+### Run tests
+
+```
+$ uv run pytest
+```
