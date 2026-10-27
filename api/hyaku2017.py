@@ -1,10 +1,11 @@
 import json
+import os
 import tornado.web
 
 IIIF_IMAGE_CONTEXT = 'http://iiif.io/api/image/2/context.json'
 IIIF_PRESENTATION_CONTEXT = 'http://iiif.io/api/presentation/2/context.json'
 IIIF_IMAGE_API_2 = 'http://iiif.io/api/image/2/level2.json'
-IIIF_SERVICE_URI = 'https://iiif.tiramis2.doshisha.ac.jp/'
+IIIF_SERVICE_URI = os.getenv('BASE_URL', 'https://iiif.tiramis2.doshisha.ac.jp/')
 HEIGHT = 2000
 WIDTH = 2669
 
