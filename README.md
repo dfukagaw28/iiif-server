@@ -48,9 +48,16 @@ $ du -h default.jpg
 
 ## For developers
 
-### Update Pipfile
+### Update dependencies
+
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` and `uv.lock`).
 
 ```
-$ podman run --rm -it -v $(pwd):/code -w /code python:3.11-alpine /bin/sh
-$ pipenv install tornado
+$ uv lock --upgrade-package tornado
+```
+
+To add a new package:
+
+```
+$ uv add <package>
 ```
