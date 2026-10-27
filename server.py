@@ -94,9 +94,12 @@ class ImageHandler(tornado.web.RequestHandler):
     async def get(self, query, params, region, size, rotation, quality, format):
         identifier_raw = resolve_identifier(query)
         identifier_quoted = quote(identifier_raw, safe='')
+        # Keep only the characters used in IIIF parameters (e.g. "pct:", "^!w,h")
+        # so that "&", "#", etc. cannot inject extra parameters into the iipsrv query
+        params_quoted = quote(params, safe='/,:!^')
 
         try:
-            response = await fetch_iipsrv(f'{ identifier_quoted }/{ params }')
+            response = await fetch_iipsrv(f'{ identifier_quoted }/{ params_quoted }')
         except (tornado.httpclient.HTTPError, OSError) as e:
             handle_fetch_error(self, e)
         else:
