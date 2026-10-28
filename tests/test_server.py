@@ -8,7 +8,24 @@ import tornado.web
 import server
 
 
-INFO_JSON = b'{"id": "http://iipsrv/?IIIF=x.tif", "width": 100, "height": 100}'
+## Image API 3 info.json, as returned by iipsrv with IIIF_VERSION=3
+INFO_JSON = b'''{
+  "@context" : "http://iiif.io/api/image/3/context.json",
+  "protocol" : "http://iiif.io/api/image",
+  "width" : 8049,
+  "height" : 6033,
+  "sizes" : [ { "width" : 251, "height" : 188 } ],
+  "tiles" : [ { "width" : 256, "height" : 256, "scaleFactors" : [ 1, 2, 4 ] } ],
+  "id" : "http://iipsrv/?IIIF=x.tif",
+  "type": "ImageService3",
+  "profile" : "level2",
+  "maxWidth" : 3000,
+  "maxHeight" : 3000,
+  "extraQualities": ["color","gray","bitonal"],
+  "extraFormats": ["webp"],
+  "extraFeatures": ["regionByPct","sizeUpscaling","rotationBy90s","mirroring"],
+  "service": [ { "profile": "http://iiif.io/api/annex/services/physdim", "physicalScale": 0.00166667, "physicalUnits": "in" } ]
+}'''
 
 
 ## Fake iipsrv that records the queries it receives
@@ -65,6 +82,41 @@ class ServerTestCase(tornado.testing.AsyncHTTPTestCase):
         info = json.loads(response.body)
         self.assertEqual(info['id'], f'{server.BASE_URL}v3/image/x.tif')
 
+    def test_info_json_v2(self):
+        response = self.fetch('/v2/image/x.tif/info.json')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(
+            response.headers['Content-Type'],
+            'application/ld+json;profile="http://iiif.io/api/image/2/context.json"')
+        self.assertEqual(self.received, ['/?IIIF=x.tif/info.json'])
+        info = json.loads(response.body)
+        self.assertEqual(info['@context'], 'http://iiif.io/api/image/2/context.json')
+        self.assertEqual(info['@id'], f'{server.BASE_URL}v2/image/x.tif')
+        self.assertNotIn('id', info)
+        self.assertEqual((info['width'], info['height']), (8049, 6033))
+        self.assertEqual(info['tiles'][0]['scaleFactors'], [1, 2, 4])
+        self.assertEqual(info['sizes'], [{'width': 251, 'height': 188}])
+        self.assertEqual(info['service'][0]['physicalUnits'], 'in')
+        self.assertEqual(info['profile'], [
+            'http://iiif.io/api/image/2/level2.json',
+            {
+                'formats': ['webp'],
+                'qualities': ['color', 'gray', 'bitonal'],
+                # sizeUpscaling is not defined in Image API 2
+                'supports': ['regionByPct', 'rotationBy90s', 'mirroring'],
+                'maxWidth': 3000,
+                'maxHeight': 3000,
+            },
+        ])
+
+    def test_info_json_v2_hashed_identifier(self):
+        # The @id keeps the identifier as requested, not the resolved file path
+        h = 'ab' + '0' * 62
+        response = self.fetch(f'/v2/image/{h}/info.json')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(self.received, [f'/?IIIF=a%2Fb%2F{h}.tif/info.json'])
+        self.assertEqual(json.loads(response.body)['@id'], f'{server.BASE_URL}v2/image/{h}')
+
     def test_image(self):
         response = self.fetch('/v3/image/x.tif/full/max/0/default.jpg')
         self.assertEqual(response.code, 200)
@@ -118,6 +170,7 @@ class ServerTestCase(tornado.testing.AsyncHTTPTestCase):
     def test_not_found_is_passed_through(self):
         for path in [
             '/v3/image/missing.tif/info.json',
+            '/v2/image/missing.tif/info.json',
             '/v3/image/missing.tif/full/max/0/default.jpg',
         ]:
             with self.subTest(path=path):
