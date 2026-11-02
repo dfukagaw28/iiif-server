@@ -1,0 +1,29 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          # Same as the Docker image
+          python-version: "3.11"
+      - run: uv sync --locked
+      - run: uv run pytest
+
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the Docker image
+        run: docker build -t iiif-server .
+      - name: Run tests in the image
+        # The image has no dev dependencies; add pytest from uv.lock first
+        run: >-
+          docker run --rm -v "$PWD:/code" -w /code iiif-server
+          sh -c 'uv sync --locked --inexact --only-group dev && python -m pytest -p no:cacheprovider'

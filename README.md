@@ -46,6 +46,14 @@ $ du -h default.jpg
 492K    default.jpg
 ```
 
+## Maintenance
+
+GitHub Actions runs the tests on every push (`.github/workflows/test.yml`), both
+with uv and inside the Docker image. Dependabot opens pull requests each month
+for Python packages, the Python base image and GitHub Actions
+(`.github/dependabot.yml`). Python itself stays on 3.11; upgrade it by hand
+(`Dockerfile` and the workflow).
+
 ## For developers
 
 ### Update dependencies
