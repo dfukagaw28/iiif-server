@@ -13,7 +13,7 @@ updates:
     schedule:
       interval: monthly
     ignore:
-      # Upgrade Python (3.11 -> 3.12 and later) by hand
+      # Upgrade Python (3.13 -> 3.14 and later) by hand
       - dependency-name: python
         update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
