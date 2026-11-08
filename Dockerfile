@@ -1,6 +1,6 @@
 FROM python:3.13-alpine
 
-COPY --from=ghcr.io/astral-sh/uv:0.12.15 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /usr/local/bin/uv
 
 ENV PYTHONUNBUFFERED=1
 # Install dependencies into the system Python instead of a virtualenv
